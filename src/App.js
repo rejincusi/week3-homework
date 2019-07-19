@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
 import './App.css';
+import { connect } from 'react-redux'
+import ModelDetails from './components/ModelDetails';
 
 class App extends Component {
   state = {
-    addedList: [],
     selected: "",
     computers: [
       {
@@ -33,15 +34,30 @@ class App extends Component {
     ]
   }
 
-  handleChange = (e) => {
-    this.setState({ selected: e.target.value});
+  updateSelection = (e) => {
+    this.setState({
+      selected: e.target.value
+    });
   }
 
   handleSubmit = (e) => {
     e.preventDefault();
-    const computerDetail = this.state.computers.find(computer => computer.name === this.state.selected)
+    
     if (this.state.selected) {
-      this.setState({ addedList: [...this.state.addedList, computerDetail] })
+      
+      const computerDetail = this.state.computers.find(computer => 
+        computer.name === this.state.selected)
+      
+      this.props.dispatch({
+        type: 'ADD_LIST',
+        payload: {
+          id: Math.ceil(Math.random()*10000),
+          name: computerDetail.name,
+          manufacturer: computerDetail.manufacturer,
+          year: computerDetail.year,
+          origin: computerDetail.origin
+        }
+      })
     }
   }
 
@@ -53,26 +69,24 @@ class App extends Component {
         {computer.name} ({computer.year})
       </option>
     )
-    const lists = this.state.addedList.map(list => 
-      <ul>
-        <li>Name: {list.name}</li>
-        <li>Manufacturer: {list.manufacturer}</li>
-        <li>Year: {list.year}</li>
-        <li>Origin: {list.origin}</li>
-      </ul>
+    const lists = this.props.lists.map(list => 
+      <ModelDetails
+        key={list.id} 
+        name={list.name}
+        manufacturer={list.manufacturer}
+        year={list.year}
+        origin={list.origin}
+      />
     )
     return (
       <div className="App">
-        <div className="added-list">
-          { lists }
-        </div>
+        { lists }
         <form onSubmit={this.handleSubmit.bind(this)}>
           <select
-            name="computer"
-            onChange={this.handleChange}
+            onChange={this.updateSelection}
             value={this.state.selected}>
             <option value="">-- pick a model --</option>
-            {optionList}
+            { optionList }
           </select>
           <button type="submit">Add</button>
         </form>
@@ -81,4 +95,10 @@ class App extends Component {
   }
 }
 
-export default App;
+const mapStateToProps = (state) => {
+  return {
+    lists: state
+  }
+}
+
+export default connect(mapStateToProps)(App);
